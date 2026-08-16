@@ -1,50 +1,5 @@
-/** pg-islandloop — 環島賽 (競速) */
-
-function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
-function mulberry32(a) {
-  return function() {
-    let t = (a += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function deep(o) { return JSON.parse(JSON.stringify(o)); }
-
-
-export function createGame({ seed = 1, track = 0, upgrades = { speed: 0, handling: 0 } } = {}) {
-  return { seed, track, upgrades, lap: 1, progress: 0, time: 0, best: null, nitro: 3, outcome: "playing", msg: "三圈完賽。加速／漂移。" };
-}
-export function getLegalActions(s) {
-  if (s.outcome !== "playing") return [];
-  return ["accel", "drift", "nitro"];
-}
-export function applyAction(state, action) {
-  const s = deep(state);
-  if (s.outcome !== "playing") return s;
-  const spd = 8 + s.upgrades.speed * 2;
-  const hand = 1 + s.upgrades.handling * 0.15;
-  let gain = action === "accel" ? spd : action === "drift" ? spd * 0.7 * hand : spd * 1.6;
-  if (action === "nitro") {
-    if (s.nitro <= 0) { s.msg = "氮氣用完"; return s; }
-    s.nitro--;
-  }
-  s.progress += gain;
-  s.time += 1;
-  if (s.progress >= 100) {
-    s.progress = 0;
-    s.lap++;
-    s.msg = `完成第 ${s.lap - 1} 圈`;
-    if (s.lap > 3) {
-      s.outcome = "won";
-      s.best = s.time;
-      s.msg = `完賽！用時 ${s.time} 拍`;
-    }
-  } else s.msg = action === "drift" ? "漂移過彎" : action === "nitro" ? "氮氣加速！" : "直線催速";
-  return s;
-}
-export function summarize(s) {
-  return { lap: s.lap, progress: Math.floor(s.progress), time: s.time, nitro: s.nitro, msg: s.msg, outcome: s.outcome, upgrades: s.upgrades };
-}
-export function getOutcome(s) { return s.outcome; }
-
+const copy=o=>structuredClone(o);const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));function roll(seed){let t=seed+0x6d2b79f5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}
+export function createGame({seed=1,track=0,upgrades={speed:0,handling:0}}={}){return{seed,track,upgrades,lap:1,progress:0,time:0,nitro:3,combo:0,outcome:"playing",msg:"完成三圈；彎道用漂移更快"}}
+export const getLegalActions=s=>s.outcome==="playing"?["accel","drift","nitro"]:[];
+export function applyAction(state,a){if(state.outcome!=="playing")return state;const s=copy(state),curve=Math.floor(s.progress/20)%2===1;let gain=7+s.upgrades.speed*1.2;if(a==="drift"){gain*=curve?1.55+s.upgrades.handling*.08:.72;s.combo=curve?s.combo+1:0;s.msg=curve?"完美漂移！":"直線漂移拖慢速度"}else if(a==="nitro"){if(!s.nitro){s.msg="氮氣已耗盡";return s}s.nitro--;gain*=1.9;s.msg="氮氣噴射！"}else{s.msg=curve?"入彎太快！":"全油門";if(curve)gain*=.65}s.progress+=gain;s.time++;if(s.progress>=100){s.progress-=100;s.lap++;s.nitro=clamp(s.nitro+1,0,3);if(s.lap>3){s.outcome="won";s.msg=`三圈完賽！${s.time} 拍`}else s.msg=`第 ${s.lap} 圈`}return s}
+export const summarize=s=>({lap:Math.min(s.lap,3),progress:Math.floor(s.progress),time:s.time,nitro:s.nitro,score:Math.max(0,500-s.time*5),msg:s.msg,outcome:s.outcome});export const getOutcome=s=>s.outcome;
