@@ -1,1 +1,184 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090b18"><meta name="description" content="在海岸與山線兩條賽道完成三圈，用獎金永久升級速度與操控。"><title>環島賽</title><link rel="stylesheet" href="./styles.css"></head><body><main><header class="top"><div><p class="eyebrow">俯視競速</p><h1>環島賽</h1></div><button id="sound" class="sound" type="button" aria-pressed="true">♪ 音樂開</button></header><section id="lobby" class="panel"><img class="lobby-art" src="./assets/images/cover.png" alt=""><p class="blurb">在海岸與山線兩條賽道完成三圈，用獎金永久升級速度與操控。</p><div class="options"><label>賽道<select id="track"><option value="0">海岸環線</option><option value="1">山城髮夾彎</option></select></label></div><button id="start" class="primary" type="button">開始挑戰</button><p class="meta">本機最佳 <strong id="best">0</strong> · <a href="./ATTRIBUTION.md">素材署名</a></p></section><section id="game" hidden><div class="gamebar"><span id="badge" class="badge">進行中</span><p id="hud"></p></div><div class="stage-wrap"><canvas id="stage" width="800" height="450" aria-label="環島賽遊戲畫面"></canvas></div><p id="message" class="message" aria-live="polite"></p><div id="controls" class="controls" aria-label="遊戲控制"></div></section></main><script type="module" src="./app.js"></script></body></html>
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a1420" />
+    <meta
+      name="description"
+      content="環島賽：四條賽道的俯視競速盃賽，鍵盤或觸控搖桿操控，車輛改裝與計時榜。"
+    />
+    <title>環島賽</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main id="app">
+      <!-- 標題 -->
+      <section class="screen" id="screen-title">
+        <header class="title-head">
+          <p class="eyebrow">俯視競速</p>
+          <h1>環島賽</h1>
+          <p class="tagline">四站盃賽、車輛改裝、單圈計時榜。轉向與油門都在你手上。</p>
+        </header>
+        <div class="menu">
+          <button type="button" class="btn primary" data-go="cup">開始盃賽</button>
+          <button type="button" class="btn" data-go="timetrial">計時賽</button>
+          <button type="button" class="btn" data-go="garage">車庫改裝</button>
+          <button type="button" class="btn" data-go="board">計時榜</button>
+          <button type="button" class="btn ghost" data-go="credits">操作說明／署名</button>
+        </div>
+        <p class="stat-line">
+          資金 <strong id="title-credits">0</strong> · 冠軍 <strong id="title-cups">0</strong> ·
+          出賽 <strong id="title-races">0</strong>
+        </p>
+        <button type="button" class="sound-toggle" id="sound-toggle" aria-pressed="true">♪ 音效開</button>
+      </section>
+
+      <!-- 車庫 -->
+      <section class="screen" id="screen-garage" hidden>
+        <header class="bar">
+          <button type="button" class="btn small" data-go="title">← 返回</button>
+          <h2>車庫</h2>
+          <span class="credits">資金 <strong id="garage-credits">0</strong></span>
+        </header>
+        <div class="scroll">
+          <h3>選車</h3>
+          <div class="car-grid" id="car-grid"></div>
+          <h3>改裝</h3>
+          <ul class="upgrade-list" id="upgrade-list"></ul>
+          <div class="spec-box" id="spec-box"></div>
+          <button type="button" class="btn danger" id="reset-progress">重置所有進度</button>
+        </div>
+      </section>
+
+      <!-- 賽道選擇（計時賽） -->
+      <section class="screen" id="screen-tracks" hidden>
+        <header class="bar">
+          <button type="button" class="btn small" data-go="title">← 返回</button>
+          <h2>計時賽</h2>
+        </header>
+        <div class="scroll"><div class="track-grid" id="track-grid"></div></div>
+      </section>
+
+      <!-- 計時榜 -->
+      <section class="screen" id="screen-board" hidden>
+        <header class="bar">
+          <button type="button" class="btn small" data-go="title">← 返回</button>
+          <h2>計時榜</h2>
+        </header>
+        <div class="scroll" id="board-body"></div>
+      </section>
+
+      <!-- 說明／署名 -->
+      <section class="screen" id="screen-credits" hidden>
+        <header class="bar">
+          <button type="button" class="btn small" data-go="title">← 返回</button>
+          <h2>操作與署名</h2>
+        </header>
+        <div class="scroll prose">
+          <h3>操作</h3>
+          <ul>
+            <li><strong>手機：</strong>左下角任意處按下即出現搖桿，左右拖曳轉向；右下角油門／剎車／氮氣。</li>
+            <li><strong>剎車＋轉向</strong>會拉手煞尾滑；漂移會充氮氣。</li>
+            <li><strong>鍵盤：</strong>↑／W 油門、↓／S 剎車、←→／A D 轉向、空白鍵手煞、Shift／N 氮氣、P 暫停、R 重跑。</li>
+            <li>草地與沙地會失速；油漬會讓車瞬間打滑。撞爛（耐久見底）或超時就淘汰。</li>
+          </ul>
+          <h3>素材署名</h3>
+          <ul id="credits-list"></ul>
+          <p class="muted">完整清單見 repo 內 <code>ATTRIBUTION.md</code>。</p>
+        </div>
+      </section>
+
+      <!-- 盃賽積分 -->
+      <section class="screen" id="screen-cup" hidden>
+        <header class="bar">
+          <button type="button" class="btn small" data-go="title">← 離開盃賽</button>
+          <h2 id="cup-title">盃賽積分</h2>
+        </header>
+        <div class="scroll">
+          <div id="cup-body"></div>
+          <button type="button" class="btn primary" id="cup-next">下一站</button>
+        </div>
+      </section>
+
+      <!-- 比賽 -->
+      <section class="screen race" id="screen-race" hidden>
+        <div class="stage">
+          <canvas id="stage" aria-label="賽道畫面"></canvas>
+
+          <div class="hud" id="hud">
+            <div class="hud-row">
+              <div class="chip"><span class="chip-k">圈</span><strong id="hud-lap">1/3</strong></div>
+              <div class="chip"><span class="chip-k">名次</span><strong id="hud-place">4/4</strong></div>
+              <div class="chip wide"><span class="chip-k">時間</span><strong id="hud-clock">00.000</strong></div>
+              <button type="button" class="chip btn-chip" id="pause-btn" aria-label="暫停">⏸</button>
+            </div>
+            <div class="hud-row gauges">
+              <div class="gauge">
+                <span class="gauge-label">耐久</span>
+                <div class="gauge-track"><i id="gauge-damage" style="width: 100%"></i></div>
+              </div>
+              <div class="gauge boost">
+                <span class="gauge-label">氮氣</span>
+                <div class="gauge-track"><i id="gauge-boost" style="width: 50%"></i></div>
+              </div>
+            </div>
+            <canvas id="minimap" width="112" height="112" aria-hidden="true"></canvas>
+            <div class="speedo"><strong id="hud-speed">0</strong><span>km/h</span></div>
+            <p class="lap-note" id="hud-note" aria-live="polite"></p>
+          </div>
+
+          <div class="countdown" id="countdown" hidden></div>
+
+          <div class="touch-layer" id="touch-layer">
+            <div class="stick-zone" id="stick-zone" aria-hidden="true">
+              <span class="stick-hint">轉向</span>
+              <span class="stick-knob" id="stick-knob"></span>
+            </div>
+            <div class="pedals">
+              <button type="button" class="pedal nitro" id="pedal-nitro">氮氣</button>
+              <div class="pedal-row">
+                <button type="button" class="pedal brake" id="pedal-brake">剎車</button>
+                <button type="button" class="pedal gas" id="pedal-gas">油門</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-wrap" id="pause-panel" hidden>
+            <div class="panel">
+              <h3>暫停</h3>
+              <label class="switch">
+                <input type="checkbox" id="auto-throttle" />
+                <span>自動油門（手機推薦）</span>
+              </label>
+              <div class="panel-actions">
+                <button type="button" class="btn primary" id="resume-btn">繼續比賽</button>
+                <button type="button" class="btn" id="restart-btn">重跑本站</button>
+                <button type="button" class="btn ghost" id="quit-btn">離開比賽</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-wrap" id="result-panel" hidden>
+            <div class="panel" id="result-body"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 頁內確認（不使用瀏覽器原生 dialog） -->
+      <div class="panel-wrap" id="confirm-panel" hidden>
+        <div class="panel">
+          <h3 id="confirm-title">確認</h3>
+          <p id="confirm-text"></p>
+          <div class="panel-actions">
+            <button type="button" class="btn danger" id="confirm-yes">確定</button>
+            <button type="button" class="btn ghost" id="confirm-no">取消</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="toast" id="toast" aria-live="polite" hidden></p>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,19 +1,45 @@
 # 環島賽 (`pg-islandloop`)
 
-多賽道盃、車輛改裝、計時榜。
+俯視角競速：四站環島盃、車輛改裝、單圈計時榜。轉向與油門都在你手上。
 
 類型：**競速** · 系列建議：街機
 
-## 遊玩
+## 玩法
 
-純 HTML／CSS／JavaScript（無 build）。本機開 `index.html` 或經 Playgrounds／go 安裝。
+- **盃賽**：西濱海線 → 山城髮夾 → 夜港短道 → 全島大環，四站積分（10/6/4/2）比總分；奪冠有獎金。
+- **計時賽**：單站拚最速圈，成績進計時榜（含 AI 種子成績）。
+- **勝**：完賽名次／盃賽總分；**敗**：耐久歸零退賽、或超過限時未完賽。
+- **改裝**：引擎、輪胎、煞車、氮氣、車體強化共 5 項，各 3 級；獎金買改裝或換車（掀背 / 賽車 / 卡丁 / 概念車）。
+- 賽道有路肩、砂石緩衝區、護欄、油桶／柵欄與油漬；撞擊扣耐久，油漬讓抓地力驟降。
+
+## 操作
+
+| | 鍵盤 | 觸控 |
+| --- | --- | --- |
+| 轉向 | `←` `→` / `A` `D` | 左下類比搖桿（跟指，鬆手歸零） |
+| 油門 | `↑` / `W` | 右下「油門」 |
+| 煞車／倒車 | `↓` / `S` | 「剎車」 |
+| 手煞車甩尾 | `Space` | 搖桿快速大角度 |
+| 氮氣 | `Shift` | 「氮氣」 |
+| 暫停 | `P` / `Esc` | HUD ⏸ |
+
+搖桿只推方向時會自動給油（auto-throttle），單手也能開。
+
+## 遊玩／安裝
+
+純 HTML／CSS／JavaScript（無 build step）。本機直接開 `index.html`，或經 Playgrounds 場網／`go` 安裝。
+進度（獎金、改裝、計時榜）存在 `PG.kv`，沒有宿主時退回 `/api/kv`，最後退回記憶體。
 
 ## 開發
 
 ```bash
-npx vitest run
+npx vitest run     # 91 tests：賽道幾何、車輛物理、AI、改裝／盃賽計分、計時榜、持久化
 ```
+
+程式分層：`src/track.js`（賽道生成／表面判定）、`src/physics.js`（車輛動力學／碰撞）、
+`src/ai.js`（對手駕駛）、`src/race.js`（圈數／計時／勝敗）、`src/garage.js`（改裝／積分）、
+`src/leaderboard.js`、`src/persist.js`、`src/input.js`、`src/audio.js`、`src/render.js`（Canvas + rAF）。
 
 ## 署名
 
-見 [ATTRIBUTION.md](./ATTRIBUTION.md)。
+見 [ATTRIBUTION.md](./ATTRIBUTION.md)（CC0 也署名）。
